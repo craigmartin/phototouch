@@ -1,0 +1,51 @@
+setTimeout(function() {
+
+    Phototouch.stateManager = Ember.StateManager.create({
+        rootElement: '#mainArea',
+        initialState: 'showPhotoView',
+
+        showPhotoView: Ember.ViewState.create({
+            enter: function(stateManager) {
+                this._super(stateManager);
+                Phototouch.PhotoListController.set('content', Phototouch.store.findAll(Phototouch.Photo));
+            },
+
+            view: Em.ContainerView.create({
+                childViews: ['photoListView', 'controlButtoniew', 'selectedPhotoView'],
+
+                photoListView: Em.View.extend({
+                    elementId: "thumbnailViewList",
+                    templateName: 'photo-view-list',
+                    contentBinding: 'Phototouch.PhotoListController.content'
+                }),
+
+                selectedPhotoView: Em.View.extend({
+                    templateName: 'selected-photo',
+                    contentBinding: 'Phototouch.SelectedPhotoController.content',
+                    classNames: ['selectedPhoto']
+                }),
+
+                controlButtoniew: Em.View.extend({
+                    templateName: 'control-button-view',
+                    classNames: 'controlButtons'
+                })
+            })
+        })
+    });
+
+}, 50);
+
+setTimeout(function() {
+    Phototouch.routes = Em.Object.create({
+        gotoRoute: function(routeParams) {
+            if(routeParams.type === 'photo' && routeParams.id) {
+                Phototouch.PhotoListController.selectPhotoWithId(routeParams.id);
+                document.title = 'Phototouch - ' + routeParams.id;
+                Phototouch.stateManager.goToState('showPhotoView');
+            }
+        }
+    });
+
+    SC.routes.add(":type/:id", Phototouch.routes, 'gotoRoute');
+    SC.routes.add(":type", Phototouch.routes, 'gotoRoute');
+}, 250)
